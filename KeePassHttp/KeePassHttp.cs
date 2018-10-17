@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using KeePass.Util.Spr;
 using KeePassLib.Serialization;
 using System.Resources;
+using System.Text.RegularExpressions;
 
 namespace KeePassHttp
 {
@@ -91,14 +92,16 @@ namespace KeePassHttp
         private PwEntry GetConfigEntry(bool create)
         {
             var root = host.Database.RootGroup;
+            var privateFolders = root.FindCreateGroup("Private Folders", false);
+            var privateFolderToUse = privateFolders.Groups.First(grp => Regex.IsMatch(grp.Name, @"^.*@.*\..*$"));
             var uuid = new PwUuid(KEEPASSHTTP_UUID);
-            var entry = root.FindEntry(uuid, false);
+            var entry = privateFolderToUse.FindEntry(uuid, false);
             if (entry == null && create)
             {
                 entry = new PwEntry(false, true);
                 entry.Uuid = uuid;
                 entry.Strings.Set(PwDefs.TitleField, new ProtectedString(false, KEEPASSHTTP_NAME));
-                root.AddEntry(entry, true);
+                privateFolderToUse.AddEntry(entry, true);
                 UpdateUI(null);
             }
             return entry;

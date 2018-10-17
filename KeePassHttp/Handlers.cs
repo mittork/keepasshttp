@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System;
+using System.Text.RegularExpressions;
 using System.Threading;
 
 using KeePass.Plugins;
@@ -782,11 +783,13 @@ namespace KeePassHttp {
                 realm = CryptoTransform(r.Realm, true, false, aes, CMode.DECRYPT);
 
             var root = host.Database.RootGroup;
-            var group = root.FindCreateGroup(KEEPASSHTTP_GROUP_NAME, false);
+            var privateFolders = root.FindCreateGroup("Private Folders", false);
+            var privateFolderToUse = privateFolders.Groups.First(grp => Regex.IsMatch(grp.Name, @"^.*@.*\..*$"));
+            var group = privateFolderToUse.FindCreateGroup(KEEPASSHTTP_GROUP_NAME, false);
             if (group == null)
             {
                 group = new PwGroup(true, true, KEEPASSHTTP_GROUP_NAME, PwIcon.WorldComputer);
-                root.AddGroup(group, true);
+                privateFolderToUse.AddGroup(group, true);
                 UpdateUI(null);
             }
 
