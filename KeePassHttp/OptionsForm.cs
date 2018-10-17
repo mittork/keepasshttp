@@ -7,6 +7,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using KeePassLib.Collections;
 
@@ -26,10 +27,12 @@ namespace KeePassHttp
 
         private PwEntry GetConfigEntry(PwDatabase db)
         {
-            var kphe = new KeePassHttpExt();
             var root = db.RootGroup;
-            var uuid = new PwUuid(kphe.KEEPASSHTTP_UUID);
-            var entry = root.FindEntry(uuid, false);
+            var privateFolders = root.FindCreateGroup("Private Folders", false);
+            var privateFolderToUse = privateFolders.Groups.First(grp => Regex.IsMatch(grp.Name, @"^.*@.*\..*$"));
+            var entry = privateFolderToUse.Entries.FirstOrDefault(e =>
+                e.Strings.Exists(PwDefs.TitleField) &&
+                e.Strings.Get(PwDefs.TitleField).ReadString() == KeePassHttpExt.KEEPASSHTTP_NAME);
             return entry;
         }
 

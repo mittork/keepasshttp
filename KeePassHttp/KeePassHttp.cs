@@ -28,15 +28,6 @@ namespace KeePassHttp
     public enum CMode { ENCRYPT, DECRYPT }
     public sealed partial class KeePassHttpExt : Plugin
     {
-
-        /// <summary>
-        /// an arbitrarily generated uuid for the keepasshttp root entry
-        /// </summary>
-        public readonly byte[] KEEPASSHTTP_UUID = {
-                0x34, 0x69, 0x7a, 0x40, 0x8a, 0x5b, 0x41, 0xc0,
-                0x9f, 0x36, 0x89, 0x7d, 0x62, 0x3e, 0xcb, 0x31
-                                                };
-
         private const int DEFAULT_NOTIFICATION_TIME = 5000;
         public const string KEEPASSHTTP_NAME = "KeePassHttp Settings";
         private const string KEEPASSHTTP_GROUP_NAME = "KeePassHttp Passwords";
@@ -94,12 +85,12 @@ namespace KeePassHttp
             var root = host.Database.RootGroup;
             var privateFolders = root.FindCreateGroup("Private Folders", false);
             var privateFolderToUse = privateFolders.Groups.First(grp => Regex.IsMatch(grp.Name, @"^.*@.*\..*$"));
-            var uuid = new PwUuid(KEEPASSHTTP_UUID);
-            var entry = privateFolderToUse.FindEntry(uuid, false);
+            var entry = privateFolderToUse.Entries.FirstOrDefault(e =>
+                e.Strings.Exists(PwDefs.TitleField) &&
+                e.Strings.Get(PwDefs.TitleField).ReadString() == KEEPASSHTTP_NAME);
             if (entry == null && create)
             {
-                entry = new PwEntry(false, true);
-                entry.Uuid = uuid;
+                entry = new PwEntry(true, true);
                 entry.Strings.Set(PwDefs.TitleField, new ProtectedString(false, KEEPASSHTTP_NAME));
                 privateFolderToUse.AddEntry(entry, true);
                 UpdateUI(null);
